@@ -26,6 +26,7 @@ import {
   NavigationEvents,
 } from 'react-navigation';
 import Modal from 'react-native-modal';
+import ReactNativeParallaxHeader from 'react-native-parallax-header';
 import { BarCodeScanner } from 'expo-barcode-scanner';
 import * as Font from 'expo-font';
 import * as Permissions from 'expo-permissions';
@@ -35,7 +36,7 @@ require("firebase/firestore");
 import styled from 'styled-components';
 import _ from 'lodash';
 import PinInput from 'react-native-pin-input';
-import { VictoryLine, VictoryAxis, VictoryChart, VictoryLabel } from "victory-native";
+import { VictoryArea, VictoryAxis, VictoryChart, VictoryLabel } from "victory-native";
 
 YellowBox.ignoreWarnings(['Setting a timer']);
 YellowBox.ignoreWarnings(["Warning: Can't perform a React state update on an unmounted component"]);
@@ -66,7 +67,7 @@ const qrVBuff = parseInt(((windowHeight * (65 / 77)) - qrSize) / 2);
 const cheight = parseInt(Dimensions.get('window').height * (65 / 770));
 const profile = cheight * .70;
 const work = parseInt(Dimensions.get('window').height * (65 / 77));
-const chartainw = windowWidth * 0.9;
+const chartainw = windowWidth * 0.8;
 const chartainh = 250;
 
 const e_dat = require('./assets/json/eur.json');
@@ -154,200 +155,6 @@ class SignInWindow extends Component {
     await AsyncStorage.setItem('userToken', this.state.user);
     this.props.navigation.navigate('App');
   };
-}
-
-class ContactsWindow extends Component {
-  constructor(props) {
-    super(props)
-    this.state = {
-      fontLoaded: false,
-      user: null,
-      data: [],
-    };
-
-    this.key = 0;
-  }
-
-  _retrieveUser = async () => {
-    try {
-      const username = await AsyncStorage.getItem('userToken');
-      this.setState({ user: username });
-      db.collection('users').doc(this.state.user)
-        .onSnapshot(function(doc) {
-          this.setState({ data: doc.data().contacts });
-        }.bind(this));
-    } catch(err) {
-      console.log('No user', err);
-    }
-  }
-
-  async componentDidMount() {
-    await Font.loadAsync({
-      'open-sans': require('./assets/fonts/OpenSans-Regular.ttf'),
-      'open-sans-semibold': require('./assets/fonts/OpenSans-SemiBold.ttf'),
-    });
-
-    this._retrieveUser();
-
-    this.setState({ fontLoaded: true });
-  }
-
-  pay = () => {
-    this.props.navigation.navigate('Pay');
-  }
-
-  render() {
-    return (
-      <Shell h={windowHeight} w={windowWidth}>
-        {
-          this.state.fontLoaded ? (
-            <Shell h={windowHeight} w={windowWidth}>
-              <StyledBuffer />
-              <StyledBanner>
-                <StyledTitle>
-                  Contacts
-                </StyledTitle>
-              </StyledBanner>
-              <StyledWorkspace>
-                {
-                  this.state.data.map((l, i) => (
-                    <StyledContact h={cheight} w={windowWidth} onPress={this.pay} key={i}>
-                      <Image
-                        source={{ uri: l.pic }}
-                        style={{width: profile, height: profile, borderRadius: profile}}
-                      />
-                      <ContactText>
-                        {l.name}
-                      </ContactText>
-                    </StyledContact>
-                  ))
-                }
-              </StyledWorkspace>
-              <StyledBanner />
-            </Shell>
-          ) : null
-        }
-      </Shell>
-    );
-  }
-}
-
-class PayWindow extends Component {
-  constructor(props) {
-    super(props)
-    this.state = {
-      fontLoaded: false,
-      balance: null,
-      amount: 0,
-    };
-  }
-
-  handleInput = text => {
-    this.setState({ amount: text });
-  }
-
-  _retrieveUser = async () => {
-    try {
-      const username = await AsyncStorage.getItem('userToken');
-      this.setState({ user: username });
-      db.collection('users').doc(this.state.user)
-        .onSnapshot(function(doc) {
-          this.setState({ balance: doc.data().balance });
-        }.bind(this));
-    } catch(err) {
-      console.log('No user', err);
-    }
-  }
-
-  async componentDidMount() {
-    await Font.loadAsync({
-      'open-sans': require('./assets/fonts/OpenSans-Regular.ttf'),
-      'open-sans-semibold': require('./assets/fonts/OpenSans-SemiBold.ttf'),
-    });
-
-    this._retrieveUser();
-
-    this.setState({ fontLoaded: true });
-  }
-
-  static navigationOptions = {
-    title: 'Make a Payment'
-  };
-
-  verify = async () => {
-    await AsyncStorage.setItem('balance', this.state.balance.toString());
-    await AsyncStorage.setItem('amount', this.state.amount.toString());
-    await AsyncStorage.setItem('recipient', 'Sean Lim');
-    this.props.navigation.navigate('Verify');
-  }
-
-  render() {
-    return (
-      <Shell h={windowHeight} w={windowWidth}>
-        {
-          this.state.fontLoaded ? (
-            <Shell h={windowHeight} w={windowWidth}>
-              <StyledWorkspace>
-                <ThirdDivider w={windowWidth}>
-                  <PicPartition w={windowWidth}>
-                    <Image
-                      source={{ uri: 'https://randomuser.me/api/portraits/men/67.jpg' }}
-                      style={{width: profile * 3.4, height: profile * 3.4, borderRadius: profile * 1.7}}
-                    />
-                  </PicPartition>
-                  <NamePartition w={windowWidth}>
-                    <NameText>
-                      Sean Lim
-                    </NameText>
-                  </NamePartition>
-                </ThirdDivider>
-                <ThirdDivider w={windowWidth}>
-                  <AmountNote>
-                    <AmountTitle>
-                      Enter Amount:
-                    </AmountTitle>
-                  </AmountNote>
-                  <AmountContainer>
-                    <AmountInput
-                      underlineColorAndroid='transparent'
-                      autoCapitalize='none'
-                      keyboardType='number-pad'
-                      onChangeText={this.handleInput}
-                    />
-                    <AmountDenom>
-                      <DenomText>
-                        LNR
-                      </DenomText>
-                    </AmountDenom>
-                  </AmountContainer>
-                </ThirdDivider>
-                <ThirdDivider w={windowWidth}>
-                  <BalanceTitle>
-                    <CBText>
-                      Current Balance
-                    </CBText>
-                  </BalanceTitle>
-                  <BalanceDisplay>
-                    <BalanceBox>
-                      <LargeBalance>
-                        {parseFloat(this.state.balance).toFixed(2)} LNR
-                      </LargeBalance>
-                    </BalanceBox>
-                  </BalanceDisplay>
-                </ThirdDivider>
-                <Verify w={windowWidth} onPress={this.verify}>
-                  <VText>
-                    Verify Transaction
-                  </VText>
-                </Verify>
-              </StyledWorkspace>
-              <StyledBanner />
-            </Shell>
-          ) : null
-        }
-      </Shell>
-    );
-  }
 }
 
 class VerificationWindow extends Component {
@@ -658,109 +465,108 @@ class PricesWindow extends Component {
                 </StyledTitle>
               </StyledBanner>
               <StyledWorkspace>
-                <StyledScroll w={windowWidth} h={work} disableContainerEvents>
-                  <ChartBackdrop w={chartainw} h={chartainh} pointerEvents="none">
-                    <VictoryChart width={400} height={280}>
-                      <VictoryLabel text="USD/EUR: Euro" x={225} y={30} textAnchor="middle"/>
+                <StyledScroll disableContainerEvents w={windowWidth}>
+                  <IPad />
+                  <ChartBackdropT w={chartainw} h={chartainh} pointerEvents="none">
+                    <VictoryChart width={chartainw * 1.27} height={chartainh * 1.40}>
+                      <VictoryLabel text="USD/EUR" x={chartainw * 0.3} y={chartainh * 0.31} textAnchor="middle"/>
+                      <VictoryLabel text="(Converting USD instead of LNR" x={chartainw * 0.5} y={chartainh * 0.38} textAnchor="middle"/>
+                      <VictoryLabel text="since no historical data exists yet)" x={chartainw * 0.513} y={chartainh * 0.45} textAnchor="middle"/>
+                      <VictoryLabel text={e_dat[e_dat.length - 1].y.toFixed(3).toString()} x={chartainw * 0.99} y={chartainh * 0.31} textAnchor="middle"/>
                       <VictoryAxis
-                        tickCount={2}
+                        tickCount={1}
+                        tickFormat={() => ''}
+                        style={{ axis: {stroke: "none"} }}
                       />
                       <VictoryAxis
                         dependentAxis
+                        tickCount={1}
+                        tickFormat={() => ''}
+                        style={{ axis: {stroke: "none"} }}
                       />
-                      <VictoryLine
+                      <VictoryArea
                         style={{
-                          data: { stroke: '#00c300' },
+                          data: { stroke: '#00c300', fill: '#00c30040' },
                         }}
                         data={e_dat}
+                        domain={{ y: [0.84, 0.94] }}
                       />
                     </VictoryChart>
-                  </ChartBackdrop>
+                  </ChartBackdropT>
                   <ChartBackdrop w={chartainw} h={chartainh} pointerEvents="none">
-                    <VictoryChart width={400} height={280}>
-                      <VictoryLabel text="USD/JPY: Japanese Yen" x={225} y={30} textAnchor="middle"/>
+                    <VictoryChart width={chartainw * 1.27} height={chartainh * 1.40}>
+                      <VictoryLabel text="USD/JPY" x={chartainw * 0.3} y={chartainh * 0.31} textAnchor="middle"/>
+                      <VictoryLabel text={y_dat[y_dat.length - 1].y.toFixed(3).toString()} x={chartainw * 0.99} y={chartainh * 0.31} textAnchor="middle"/>
                       <VictoryAxis
-                        tickCount={2}
+                        tickCount={1}
+                        tickFormat={() => ''}
+                        style={{ axis: {stroke: "none"} }}
                       />
                       <VictoryAxis
                         dependentAxis
+                        tickCount={1}
+                        tickFormat={() => ''}
+                        style={{ axis: {stroke: "none"} }}
                       />
-                      <VictoryLine
+                      <VictoryArea
                         style={{
-                          data: { stroke: '#00c300' },
+                          data: { stroke: '#999999', fill: '#99999940' },
                         }}
                         data={y_dat}
+                        domain={{ y: [106, 116.8] }}
                       />
                     </VictoryChart>
                   </ChartBackdrop>
                   <ChartBackdrop w={chartainw} h={chartainh} pointerEvents="none">
-                    <VictoryChart width={400} height={280}>
-                      <VictoryLabel text="USD/GBP: British Pound" x={225} y={30} textAnchor="middle"/>
+                    <VictoryChart width={chartainw * 1.27} height={chartainh * 1.40}>
+                      <VictoryLabel text="USD/GBP" x={chartainw * 0.3} y={chartainh * 0.31} textAnchor="middle"/>
+                      <VictoryLabel text={p_dat[p_dat.length - 1].y.toFixed(3).toString()} x={chartainw * 0.99} y={chartainh * 0.31} textAnchor="middle"/>
                       <VictoryAxis
-                        tickCount={2}
+                        tickCount={1}
+                        tickFormat={() => ''}
+                        style={{ axis: {stroke: "none"} }}
                       />
                       <VictoryAxis
                         dependentAxis
+                        tickCount={1}
+                        tickFormat={() => ''}
+                        style={{ axis: {stroke: "none"} }}
                       />
-                      <VictoryLine
+                      <VictoryArea
                         style={{
-                          data: { stroke: '#00c300' },
+                          data: { stroke: '#4648e8', fill: '#4648e840' },
                         }}
                         data={p_dat}
+                        domain={{ y: [0.72, 0.84] }}
                       />
                     </VictoryChart>
                   </ChartBackdrop>
-                  <ChartBackdrop w={chartainw} h={chartainh} pointerEvents="none">
-                    <VictoryChart width={400} height={280}>
-                      <VictoryLabel text="USD/CAD: Canadian Dollar" x={225} y={30} textAnchor="middle"/>
+                  <ChartBackdropB w={chartainw} h={chartainh} pointerEvents="none">
+                    <VictoryChart width={chartainw * 1.27} height={chartainh * 1.40}>
+                      <VictoryLabel text="USD/CHF" x={chartainw * 0.3} y={chartainh * 0.31} textAnchor="middle"/>
+                      <VictoryLabel text={f_dat[f_dat.length - 1].y.toFixed(3).toString()} x={chartainw * 0.99} y={chartainh * 0.31} textAnchor="middle"/>
                       <VictoryAxis
-                        tickCount={2}
-                      />
-                      <VictoryAxis
-                        dependentAxis
-                      />
-                      <VictoryLine
-                        style={{
-                          data: { stroke: '#00c300' },
-                        }}
-                        data={c_dat}
-                      />
-                    </VictoryChart>
-                  </ChartBackdrop>
-                  <ChartBackdrop w={chartainw} h={chartainh} pointerEvents="none">
-                    <VictoryChart width={400} height={280}>
-                      <VictoryLabel text="USD/SEK: Swedish Krona" x={225} y={30} textAnchor="middle"/>
-                      <VictoryAxis
-                        tickCount={2}
+                        tickCount={1}
+                        tickFormat={() => ''}
+                        style={{ axis: {stroke: "none"} }}
                       />
                       <VictoryAxis
                         dependentAxis
+                        tickCount={1}
+                        tickFormat={() => ''}
+                        style={{ axis: {stroke: "none"} }}
                       />
-                      <VictoryLine
+                      <VictoryArea
                         style={{
-                          data: { stroke: '#00c300' },
-                        }}
-                        data={k_dat}
-                      />
-                    </VictoryChart>
-                  </ChartBackdrop>
-                  <ChartBackdrop w={chartainw} h={chartainh} pointerEvents="none">
-                    <VictoryChart width={400} height={280}>
-                      <VictoryLabel text="USD/CHF: Swiss Franc" x={225} y={30} textAnchor="middle"/>
-                      <VictoryAxis
-                        tickCount={2}
-                      />
-                      <VictoryAxis
-                        dependentAxis
-                      />
-                      <VictoryLine
-                        style={{
-                          data: { stroke: '#00c300' },
+                          data: { stroke: '#575757', fill: '#57575740' },
                         }}
                         data={f_dat}
+                        domain={{ y: [0.94, 1.04] }}
                       />
                     </VictoryChart>
-                  </ChartBackdrop>
+                  </ChartBackdropB>
+                  <ChartBottom h={18} w={chartainw} />
+                  <IPad />
                 </StyledScroll>
               </StyledWorkspace>
               <StyledBanner />
@@ -782,6 +588,8 @@ class AccountWindow extends Component {
       u: null,
       isModalVisible: false,
       showQR: false,
+      plsgibmoneyz: '',
+      local: 1,
     };
   }
 
@@ -832,6 +640,168 @@ class AccountWindow extends Component {
     this.setState({ showQR: false });
   }
 
+  requestQR = text => {
+    this.setState({ plsgibmoneyz: text });
+  };
+
+  renderNavBar = () => {
+    return (
+      <View style={{height: 58, justifyContent: 'center', alignItems: 'center'}}>
+        <Text style={{color: '#f5f5f5', fontFamily: 'open-sans-semibold', fontSize: 18}}>
+          Sean  Rhee
+        </Text>
+      </View>
+    )
+  }
+
+  native = () => {
+    Alert.alert(
+      'Set Native Currency',
+      'What is the local currency? (currently limited in beta)',
+      [
+        {text: 'USD', onPress: () => this.setState({ local: 0 })},
+        {text: 'KRW', onPress: () => this.setState({ local: 1 })},
+      ],
+      {cancelable: false},
+    )
+  }
+
+  charge = () => {
+    Alert.alert(
+      'Sorry,',
+      "Unfortunately, LINE Rama doesn't currently support charging an account with real money",
+      [
+        {text: 'OK  :(', onPress: () => console.log()},
+      ],
+      {cancelable: false},
+    )
+  }
+
+  email = () => {
+    Alert.alert(
+      'Email address',
+      'seanr20112593@gmail.com',
+      [
+        {text: 'Change (not available in beta)', onPress: () => console.log()},
+        {text: 'OK', onPress: () => console.log()}
+      ],
+      {cancelable: false},
+    )
+  }
+
+  phone = () => {
+    Alert.alert(
+      'Phone Number',
+      '010-8236-1682',
+      [
+        {text: 'Change (not available in beta)', onPress: () => console.log()},
+        {text: 'OK', onPress: () => console.log()}
+      ],
+      {cancelable: false},
+    )
+  }
+
+  notif = () => {
+    Alert.alert(
+      'Notification Settings',
+      'Enable Notifications?',
+      [
+        {text: 'Deny', onPress: () => console.log()},
+        {text: 'Allow', onPress: () => console.log()},
+      ],
+      {cancelable: false},
+    )
+  }
+
+  renderContent = () => {
+    return (
+      <View>
+        <AccHolder w={windowWidth} h={cheight + 4}>
+          <AccountTitle>
+            Financing
+          </AccountTitle>
+        </AccHolder>
+        <StyledClick w={windowWidth} h={cheight - 3}>
+          <Ionicons name='ios-cash' size={23} color='#696969' style={{marginRight: 12}}/>
+          {
+            (this.state.local === 1) ? (
+              <DispAccInfo>
+                Balance: {parseFloat(this.state.balance).toFixed(2)} LNR ({(this.state.balance * 1245.8).toFixed(2)} KRW)
+              </DispAccInfo>
+            ) : (
+              <DispAccInfo>
+                Balance: {parseFloat(this.state.balance).toFixed(2)} LNR ({(this.state.balance * 1.05).toFixed(2)} USD)
+              </DispAccInfo>
+            )
+          }
+        </StyledClick>
+        <StyledClick w={windowWidth} h={cheight - 3} onPress={this.native}>
+          <Ionicons name='md-globe' size={23} color='#696969' style={{marginRight: 12}}/>
+          <DispAccInfo>
+            Native Currency
+          </DispAccInfo>
+        </StyledClick>
+        <StyledClick w={windowWidth} h={cheight - 3} onPress={this.charge}>
+          <Ionicons name='ios-add-circle-outline' size={23} color='#696969' style={{marginRight: 12}}/>
+          <DispAccInfo>
+            Charge Account
+          </DispAccInfo>
+        </StyledClick>
+        <AccHolder w={windowWidth} h={cheight + 4}>
+          <AccountTitle>
+            Account & Security
+          </AccountTitle>
+        </AccHolder>
+        <StyledClick w={windowWidth} h={cheight - 3} onPress={this.email}>
+          <Ionicons name='md-mail' size={23} color='#696969' style={{marginRight: 12}}/>
+          <DispAccInfo>
+            Email
+          </DispAccInfo>
+        </StyledClick>
+        <StyledClick w={windowWidth} h={cheight - 3} onPress={this.phone}>
+          <Ionicons name='ios-call' size={23} color='#696969' style={{marginRight: 12}}/>
+          <DispAccInfo>
+            Phone Number
+          </DispAccInfo>
+        </StyledClick>
+        <StyledClick w={windowWidth} onPress={this._changePin} h={cheight}>
+          <Ionicons name='md-keypad' size={23} color='#696969' style={{marginRight: 12}}/>
+          <DispAccInfo>
+            Set PIN
+          </DispAccInfo>
+        </StyledClick>
+        <AccHolder w={windowWidth} h={cheight + 4}>
+          <AccountTitle>
+            Other
+          </AccountTitle>
+        </AccHolder>
+        <StyledClick w={windowWidth} h={cheight - 3} onPress={this.notif}>
+          <Ionicons name='ios-notifications' size={23} color='#696969' style={{marginRight: 12}}/>
+          <DispAccInfo>
+            Notifications
+          </DispAccInfo>
+        </StyledClick>
+        <StyledClick w={windowWidth} onPress={this.toggleModal} h={cheight - 3}>
+          <Ionicons name='ios-barcode' size={23} color='#696969' style={{marginRight: 12}}/>
+          <DispAccInfo>
+            My QR
+          </DispAccInfo>
+        </StyledClick>
+        <StyledClick w={windowWidth} onPress={this.tHist} h={cheight - 3}>
+          <Ionicons name='md-time' size={23} color='#696969' style={{marginRight: 12}}/>
+          <DispAccInfo>
+            Transaction History
+          </DispAccInfo>
+        </StyledClick>
+        <Exit w={windowWidth} h={cheight - 3} onPress={this._signOutAsync}>
+          <ExitText>
+            Log Out
+          </ExitText>
+        </Exit>
+      </View>
+    )
+  }
+
   render() {
     return (
       <Shell h={windowHeight} w={windowWidth}>
@@ -852,6 +822,7 @@ class AccountWindow extends Component {
                         underlineColorAndroid='transparent'
                         autoCapitalize='none'
                         keyboardType='number-pad'
+                        onChangeText={this.requestQR}
                       />
                     </InputHolder>
                     <CancelOKHold>
@@ -882,67 +853,25 @@ class AccountWindow extends Component {
               <StyledBuffer />
               <StyledBanner>
                 <StyledTitle>
-                  Account
+                  Account Info
                 </StyledTitle>
               </StyledBanner>
               <StyledWorkspace>
-                <AccountMain>
-                  <ProfileContainer>
-                    <PicPartition w={windowWidth}>
-                      <Image
-                        source={{ uri: 'https://lh3.googleusercontent.com/ir0sisu5HsX4v70a3eGMUCL9YZXCVE0qNSHyNJIX26wWnGRcdVpTsODz7VLB-cUshJQ5uQVp=s328-no' }}
-                        style={{width: profile * 3.4, height: profile * 3.4, borderRadius: profile * 1.7}}
-                      />
-                    </PicPartition>
-                    <NamePartition w={windowWidth}>
-                      <NameText>
-                        Sean Rhee
-                      </NameText>
-                    </NamePartition>
-                  </ProfileContainer>
-                  <AccountInfo>
-                    <BalView w={windowWidth}>
-                      <DispBal>
-                        Balance: {parseFloat(this.state.balance).toFixed(2)} LNR
-                      </DispBal>
-                      <GayView>
-                        <DispLocalBal>
-                          {(this.state.balance * 1245.8).toFixed(2)} KRW
-                        </DispLocalBal>
-                      </GayView>
-                    </BalView>
-                    <SecurityView w={windowWidth}>
-                      <DispAccInfo>
-                        Email: seanr112593@gmail.com
-                      </DispAccInfo>
-                    </SecurityView>
-                    <SecurityView w={windowWidth}>
-                      <DispAccInfo>
-                        Phone Number: 010-5749-3645
-                      </DispAccInfo>
-                    </SecurityView>
-                    <GayPin w={windowWidth} onPress={this._changePin}>
-                      <DispAccInfo>
-                        Set PIN
-                      </DispAccInfo>
-                    </GayPin>
-                    <StyledClick w={windowWidth} onPress={this.toggleModal}>
-                      <AccountClickText>
-                        My QR
-                      </AccountClickText>
-                    </StyledClick>
-                    <StyledClick w={windowWidth} onPress={this.tHist}>
-                      <AccountClickText>
-                        Transaction History
-                      </AccountClickText>
-                    </StyledClick>
-                  </AccountInfo>
-                </AccountMain>
-                <Verify w={windowWidth} onPress={this._signOutAsync}>
-                  <VText>
-                    Log Out
-                  </VText>
-                </Verify>
+                <ReactNativeParallaxHeader
+                  headerMinHeight={58}
+                  headerMaxHeight={240}
+                  extraScrollHeight={20}
+                  navbarColor='#50d97b'
+                  alwaysShowTitle={false}
+                  alwaysShowNavBar={false}
+                  backgroundImage={require('./assets/img/profile.png')}
+                  backgroundImageScale={1}
+                  renderNavBar={this.renderNavBar}
+                  renderContent={this.renderContent}
+                  containerStyle={{flex: 1}}
+                  contentContainerStyle={{flexGrow: 1}}
+                  innerContainerStyle={{flex: 1}}
+                />
               </StyledWorkspace>
               <StyledBanner />
             </Shell>
@@ -1016,15 +945,37 @@ class Pindow extends Component {
   }
 
   setNew = () => {
-    db.collection('users').doc('seanr').update({
-      pin: this.state.input,
-    });
-    this.setState({ isModalVisible: false });
-    this.props.navigation.navigate('App');
+    if (this.state.input.length === 4) {
+      db.collection('users').doc('seanr').update({
+        pin: this.state.input,
+      });
+      this.setState({ isModalVisible: false });
+      this.props.navigation.navigate('App');
+    } else {
+      Alert.alert(
+        "Error",
+        "PIN must be 4 digits long",
+        [
+          {text: 'OK', onPress: () => console.log()}
+        ],
+        {cancelable: false},
+      )
+    }
   }
 
   handleInput = text => {
-    this.setState({ input: text });
+    if (isNaN(text)) {
+      Alert.alert(
+        "Sorry",
+        "Please only enter numbers",
+        [
+          {text: 'ok', onPress: () => console.log()}
+        ],
+        {cancelable: false},
+      )
+    } else {
+      this.setState({ input: text });
+    }
   };
 
   render() {
@@ -1187,12 +1138,12 @@ class HistoryWindow extends Component {
                   {
                     this.state.data.map((l, i) => (
                       <StyledT h={cheight} w={windowWidth} onPress={console.log('gay')} key={i}>
-                        <AccountClickText>
+                        <DispAccInfo>
                           {l.time.toDate().toString().substring(0, 24)}
-                        </AccountClickText>
-                        <AccountClickText>
+                        </DispAccInfo>
+                        <DispAccInfo>
                           {l.from} -> {l.amount} LNR -> {l.to}
-                        </AccountClickText>
+                        </DispAccInfo>
                       </StyledT>
                     ))
                   }
@@ -1216,9 +1167,7 @@ const getTabBarIcon = (navigation, focused, tintColor) => {
   const { routeName } = navigation.state;
   let IconComponent = Ionicons;
   let iconName;
-  if (routeName === 'Contacts') {
-    iconName = "ios-contacts";
-  } else if (routeName === 'QR') {
+  if (routeName === 'QR') {
     iconName = "ios-qr-scanner";
   } else if (routeName ==='Prices') {
     iconName = "ios-trending-up"
@@ -1232,12 +1181,6 @@ const getTabBarIcon = (navigation, focused, tintColor) => {
 const AuthStack = createStackNavigator(
   {
     SignIn: {screen: SignInWindow}
-  },
-);
-
-const PayStack = createStackNavigator(
-  {
-    Payment: {screen: PayWindow}
   },
 );
 
@@ -1261,7 +1204,6 @@ const ChangeStack = createStackNavigator(
 
 const TabNavigator = createMaterialTopTabNavigator(
   {
-    Contacts: { screen: ContactsWindow },
     QR: { screen: QRWindow },
     Prices: { screen: PricesWindow },
     Account: { screen: AccountWindow },
@@ -1300,7 +1242,6 @@ export default createAppContainer(createSwitchNavigator(
     AuthLoading: AuthLoadingScreen,
     App: TabNavigator,
     Auth: AuthStack,
-    Pay: PayStack,
     Verify: VerifyStack,
     History: HistoryStack,
     ChPin: ChangeStack,
@@ -1355,18 +1296,6 @@ const StyledSubmit = styled.TouchableOpacity`
   borderRadius: 6px;
 `;
 
-const StyledContact = styled.TouchableOpacity`
-  backgroundColor: #f5f5f5;
-  borderBottomWidth: 1px;
-  borderColor: #dcdcdc;
-  paddingLeft: 25px;
-  height: ${props => props.h};
-  width: ${props => props.w};
-  alignItems: center;
-  display: flex;
-  flexDirection: row;
-`;
-
 const StyledT = styled.TouchableOpacity`
   backgroundColor: #f5f5f5;
   borderBottomWidth: 1px;
@@ -1378,56 +1307,6 @@ const StyledT = styled.TouchableOpacity`
   justifyContent: center;
   display: flex;
   flexDirection: column;
-`;
-
-const ContactText = styled.Text`
-  fontFamily: 'open-sans-semibold';
-  color: #212121;
-  fontSize: 18;
-  marginLeft: 18px;
-`;
-
-// 3:14:14:14
-
-const ThirdDivider = styled.View`
-  flex: 14;
-  width: ${props => props.w};
-  alignItems: center;
-  justifyContent: center;
-`;
-
-const PicPartition = styled.View`
-  flex: 4;
-  width: ${props => props.w};
-  backgroundColor: #a9eba9;
-  alignItems: center;
-  justifyContent: center;
-  paddingTop: 10px;
-`;
-
-const NamePartition = styled.View`
-  flex: 1;
-  width: ${props => props.w};
-  backgroundColor: #a9eba9;
-  alignItems: center;
-  justifyContent: center;
-  borderBottomWidth: 1px;
-  borderColor: #dcdcdc;
-`;
-
-const NameText = styled.Text`
-  fontFamily: 'open-sans-semibold';
-  fontSize: 24;
-  color: #212121;
-`;
-
-const AmountContainer = styled.View`
-  height: 75;
-  width: 350;
-  borderWidth: 1px;
-  borderColor: #525252;
-  display: flex;
-  flexDirection: row;
 `;
 
 const CancelHolder = styled.TouchableOpacity`
@@ -1663,13 +1542,45 @@ const ChartBackdrop = styled.View`
   alignItems: center;
   justifyContent: center;
   backgroundColor: #f6f6f6;
-  borderRadius: 17px;
   height: ${props => props.h};
   width: ${props => props.w};
-  marginVertical: 12px;
-  padding: 15px;
-  paddingLeft: 24px;
-  paddingBottom: 22px;
+  borderTopColor: #d4d4d4;
+  borderTopWidth: 1px;
+`;
+
+const ChartBackdropT = styled.View`
+  display: flex;
+  alignItems: center;
+  justifyContent: center;
+  backgroundColor: #f6f6f6;
+  borderTopRightRadius: 18px;
+  borderTopLeftRadius: 18px;
+  height: ${props => props.h};
+  width: ${props => props.w};
+`;
+
+const ChartBackdropB = styled.View`
+  display: flex;
+  alignItems: center;
+  justifyContent: center;
+  backgroundColor: #f6f6f6;
+  height: ${props => props.h};
+  width: ${props => props.w};
+  borderTopColor: #d4d4d4;
+  borderTopWidth: 1px;
+`;
+
+const ChartBottom = styled.View`
+  height: ${props => props.h};
+  width: ${props => props.w};
+  backgroundColor: #cecece;
+  borderBottomRightRadius: 18px;
+  borderBottomLeftRadius: 18px;
+`;
+
+const IPad = styled.View`
+  height: 16px;
+  backgroundColor: #ebebeb;
 `;
 
 const StyledScroll = styled.ScrollView.attrs(props => ({
@@ -1678,9 +1589,8 @@ const StyledScroll = styled.ScrollView.attrs(props => ({
       justifyContent: 'center',
   }
 }))`
-  height: ${props => props.h};
-  width: ${props => props.w};
   backgroundColor: #ebebeb;
+  width: ${props => props.w}
 `;
 
 const AccountMain = styled.View`
@@ -1688,57 +1598,35 @@ const AccountMain = styled.View`
   display: flex;
 `;
 
-const ProfileContainer = styled.View`
-  flex: 2;
-  background: #a9eba9;
-  flexShrink: 0;
-  alignItems: center;
-`;
-
-const AccountInfo = styled.View`
-  flex: 3;
-  width: 100%;
-`;
-
-const BalView = styled.View`
-  flex: 1;
-  width: ${props => props.w};
-  alignItems: flex-start;
-  justifyContent: center;
-  display: flex;
-  paddingLeft: 50px;
-`;
-
-const DispBal = styled.Text`
-  fontFamily: 'open-sans-semibold';
-  color: #212121;
-  fontSize: 30;
-`;
-
-const DispLocalBal = styled.Text`
-  fontFamily: 'open-sans-semibold';
-  color: #696969;
-  fontSize: 13.6;
-`;
-
-const SecurityView = styled.View`
-  flex: 0.7;
+const AccHolder = styled.View`
+  height: ${props => props.h};
   borderTopWidth: 1px;
   borderColor: #cfcfcf;
   width: ${props => props.w};
-  justifyContent: center;
   alignItems: flex-start;
-  paddingLeft: 50px;
+  justifyContent: flex-end;
+  paddingLeft: 37px;
+  paddingBottom: 24px;
 `;
 
 const StyledClick = styled.TouchableOpacity`
-  flex: 0.7;
+  height: ${props => props.h};
+  flexDirection: row;
   borderTopWidth: 1px;
   borderColor: #cfcfcf;
   width: ${props => props.w};
+  alignItems: center;
+  justifyContent: flex-start;
+  paddingLeft: 37px;
+`;
+
+const Exit = styled.TouchableOpacity`
+  height: ${props => props.h};
+  backgroundColor: #00c300;
+  width: ${props => props.w};
   alignItems: flex-start;
   justifyContent: center;
-  paddingLeft: 50px;
+  paddingLeft: 37px;
 `;
 
 const DispAccInfo = styled.Text`
@@ -1747,24 +1635,20 @@ const DispAccInfo = styled.Text`
   fontSize: 18;
 `;
 
-const GayView = styled.View`
-  paddingLeft: 130px;
-`;
-
-const AccountClickText = styled.Text`
+const ExitText = styled.Text`
   fontFamily: 'open-sans';
-  color: #696969;
+  color: #f8f8f8;
   fontSize: 18;
 `;
 
-const GayPin = styled.TouchableOpacity`
-  flex: 0.7;
-  paddingLeft: 50px;
-  borderTopWidth: 1px;
-  borderColor: #cfcfcf;
-  width: ${props => props.w};
-  alignItems: flex-start;
-  justifyContent: center;
+const AccountTitle = styled.Text`
+  fontFamily: 'open-sans-semibold';
+  color: #404040;
+  fontSize: 20;
+`;
+
+const GayView = styled.View`
+  paddingLeft: 130px;
 `;
 
 const ImgHold = styled.View`
